@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💊 Pharma Brand Finder - Corrected</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9edf2;
+        }
+        .header h1 {
+            font-size: 28px;
+            color: #1a2b4c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header h1 span {
+            background: #2a7de1;
+            color: white;
+            font-size: 14px;
+            padding: 2px 12px;
+            border-radius: 30px;
+        }
+        .stats {
+            font-size: 14px;
+            color: #5a6e85;
+            background: #f0f4f8;
+            padding: 8px 18px;
+            border-radius: 30px;
+        }
+        .search-box {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 20px;
+            border: 2px solid #dce3ec;
+            border-radius: 14px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+            background: #fafcff;
+        }
+        .search-box input:focus {
+            border-color: #2a7de1;
+            box-shadow: 0 0 0 4px rgba(42,125,225,0.15);
+        }
+        .clear-btn {
+            padding: 14px 24px;
+            background: #eef2f7;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #4a5e77;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .clear-btn:hover { background: #dce3ec; }
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid #e9edf2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+        thead {
+            background: #1a2b4c;
+            color: white;
+        }
+        thead th {
+            padding: 16px 18px;
+            text-align: left;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        thead th:first-child { width: 45%; }
+        thead th:last-child { width: 55%; }
+        tbody tr {
+            border-bottom: 1px solid #eef2f7;
+            transition: 0.2s;
+        }
+        tbody tr:hover { background: #f6f9ff; }
+        tbody td {
+            padding: 14px 18px;
+            color: #1e2d47;
+            vertical-align: middle;
+        }
+        .generic-clickable {
+            font-weight: 600;
+            color: #1a4b7a;
+            cursor: pointer;
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+            position: relative;
+        }
+        .generic-clickable:hover {
+            background: #e4edfa;
+            color: #2a7de1;
+        }
+        .generic-clickable .click-icon {
+            font-size: 12px;
+            color: #6a8eb0;
+            margin-left: 4px;
+            opacity: 0.5;
+        }
+        .reason-tag {
+            display: inline-block;
+            background: #e4edfa;
+            color: #1a4b7a;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .brand-popup {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            padding: 14px 20px;
+            min-width: 120px;
+            max-width: 340px;
+            border: 1px solid #e9edf2;
+            animation: popIn 0.2s ease;
+        }
+        .brand-popup.active { display: block; }
+        .brand-popup .brand-item {
+            padding: 2px 0;
+            font-size: 15px;
+            color: #1a2b4c;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+        .brand-popup .brand-item .brand-highlight {
+            color: #1a4b7a;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .brand-popup .brand-item .brand-other {
+            color: #4a5e77;
+            font-weight: 400;
+        }
+        .brand-popup .brand-item .separator {
+            color: #8a9bb0;
+            margin: 0 2px;
+            font-weight: 300;
+        }
+        .brand-popup .no-brands {
+            color: #8a9bb0;
+            font-size: 14px;
+            padding: 4px 0;
+        }
+        .brand-popup .popup-arrow {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-left: 1px solid #e9edf2;
+            border-top: 1px solid #e9edf2;
+            transform: rotate(45deg);
+        }
+        .brand-popup.arrow-bottom .popup-arrow {
+            top: -7px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+        .brand-popup.arrow-top .popup-arrow {
+            bottom: -7px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+            transform: rotate(225deg);
+        }
+        @keyframes popIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .no-results {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6a7e97;
+        }
+        .no-results .icon { font-size: 48px; margin-bottom: 10px; }
+        @media (max-width: 700px) {
+            .container { padding: 16px; }
+            .header h1 { font-size: 20px; }
+            .header h1 span { font-size: 12px; padding: 2px 10px; }
+            .search-box input, .clear-btn { font-size: 14px; padding: 12px 16px; }
+            thead th, tbody td { padding: 12px 14px; font-size: 14px; }
+            .stats { font-size: 12px; padding: 5px 14px; }
+            .brand-popup { min-width: 100px; max-width: 260px; padding: 12px 16px; }
+            .brand-popup .brand-item { font-size: 14px; }
+        }
+        @media (max-width: 500px) {
+            .container { padding: 12px; border-radius: 16px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .search-box { flex-direction: column; }
+            .search-box input, .clear-btn { width: 100%; }
+            table { font-size: 13px; }
+            thead th, tbody td { padding: 10px 12px; }
+            .brand-popup { min-width: 90px; max-width: 220px; padding: 10px 14px; }
+            .brand-popup .brand-item { font-size: 13px; }
+        }
+        @media print {
+            .search-box { display: none; }
+            .stats { display: none; }
+            .generic-clickable .click-icon { display: none; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border-radius: 0; padding: 10px; }
+            .brand-popup { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>💊 Brand Finder <span>v2.3</span></h1>
+            <div class="stats" id="stats">Showing <strong id="countDisplay">0</strong> generics</div>
+        </div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Search generic name, brand or reason..." autocomplete="off">
+            <button class="clear-btn" id="clearBtn">✕ Clear</button>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>🧪 Generic Name</th>
+                        <th>📂 Reason / Use</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <div id="noResults" class="no-results" style="display: none;">
+            <div class="icon">🔍</div>
+            <h3>No generics found</h3>
+            <p>Try adjusting your search</p>
+        </div>
+    </div>
+
+    <div class="brand-popup" id="brandPopup">
+        <div class="popup-arrow" id="popupArrow"></div>
+        <div id="popupBrandList"></div>
+    </div>
+
+    <script>
+        // ===========================================
+        // 📦 CORRECTED MEDICINE DATA
+        // ===========================================
+        const medicineData = [
+            // ===== FEVER / PAIN =====
+            { generic: "Paracetamol 650mg", reason: "Fever / Mild to Moderate Pain", brands: ["Dolo 650", "Calpol 650", "PCM 650"] },
+            { generic: "Paracetamol 500mg", reason: "Fever / Pain", brands: ["Crocin Advance", "Calpol 500", "Paracip 500"] },
+            { generic: "Ibuprofen + Paracetamol", reason: "Severe Pain / Fever / Inflammation", brands: ["Combiflam", "Brufen Plus", "Flexon"] },
+            { generic: "Diclofenac Sodium", reason: "Pain / Inflammation / Swelling", brands: ["Voveran", "Diclomax", "Voltaren"] },
+            { generic: "Diclofenac + Serratiopeptidase", reason: "Pain / Inflammation / Swelling", brands: ["Lyser-D", "Seradic", "Emanzen-D"] },
+            { generic: "Aceclofenac + Paracetamol", reason: "Pain / Arthritis / Fever", brands: ["Ace Proxyvon", "Dolokind", "Aceclonac-P"] },
+            { generic: "Mefenamic Acid", reason: "Menstrual Pain / Dysmenorrhea", brands: ["Meftal", "Mefkind", "Ponstan"] },
+            { generic: "Naproxen", reason: "Arthritis / Pain / Inflammation", brands: ["Naprosyn", "Xenobid", "Naprelan"] },
+
+            // ===== COLD / ALLERGY =====
+            { generic: "Cetirizine", reason: "Allergy / Hay Fever / Urticaria", brands: ["Zyrtec", "Cetrizet", "Alerid"] },
+            { generic: "Levocetirizine", reason: "Allergy / Hives / Rhinitis", brands: ["Levosiz", "Xyzal", "Levoz"] },
+            { generic: "Fexofenadine", reason: "Seasonal Allergies", brands: ["Allegra", "Fexy", "Telfast"] },
+            { generic: "Chlorpheniramine", reason: "Allergy / Cold (Sedating)", brands: ["Avil", "Piriton", "Chloramine"] },
+            { generic: "Cetirizine + Paracetamol", reason: "Cold / Allergy with Fever", brands: ["Zerodol-C", "Cetrol-P", "Cetzine-P"] },
+
+            // ===== ACIDITY / STOMACH / DIGESTION =====
+            { generic: "Pantoprazole", reason: "Acidity / GERD / Heartburn", brands: ["Pantocid", "Pantop", "Nupenta"] },
+            { generic: "Pantoprazole + Domperidone", reason: "Acidity / GERD / Nausea", brands: ["Pantocid DSR", "Pantop-D", "Nupenta-DSR"] },
+            { generic: "Omeprazole", reason: "Acidity / Heartburn / Ulcer", brands: ["Omez", "Omepraz", "Ocid"] },
+            { generic: "Omeprazole + Domperidone", reason: "Acidity / Nausea / GERD", brands: ["Omez-D", "Omepraz-D", "Ocid-D"] },
+            { generic: "Esomeprazole", reason: "GERD / Acidity / Ulcer", brands: ["Nexium", "Esomepraz", "Sompraz"] },
+            { generic: "Dicyclomine", reason: "Stomach Cramps / IBS", brands: ["Cyclopam", "Spasmindon", "Colimex"] },
+            { generic: "Dicyclomine + Paracetamol", reason: "Abdominal Pain / Cramps", brands: ["Cyclopam Plus", "Spasmo Proxyvon", "Colimex Plus"] },
+            { generic: "Ondansetron", reason: "Nausea / Vomiting / Motion Sickness", brands: ["Emeset", "Ondem", "Vomikind"] },
+            { generic: "Metoclopramide", reason: "Nausea / Vomiting / GERD", brands: ["Perinorm", "Reglan", "Maxolon"] },
+            { generic: "Domperidone", reason: "Nausea / Vomiting / GERD", brands: ["Domstal", "Motilium", "Domperon"] },
+            { generic: "Bisacodyl", reason: "Constipation", brands: ["Dulcoflex", "Laxit", "Bisalax"] },
+            { generic: "Lactulose", reason: "Chronic Constipation", brands: ["Duphalac", "Lacto", "Lax"] },
+            { generic: "Ranitidine", reason: "Acidity / Heartburn / Ulcer", brands: ["Rantac", "Zinetac", "Acitab"] },
+            { generic: "Famotidine", reason: "Acidity / Heartburn / Ulcer", brands: ["Famocid", "Famtac", "Pepcid"] },
+
+            // ===== DIABETES =====
+            { generic: "Metformin", reason: "Type 2 Diabetes (First Line)", brands: ["Glucophage", "Glycomet", "Metsmall"] },
+            { generic: "Metformin + Glimepiride", reason: "Type 2 Diabetes", brands: ["Glycomet-GP", "Zoryl-M", "Glimepiride-M"] },
+            { generic: "Glimepiride", reason: "Type 2 Diabetes (Sulfonylurea)", brands: ["Amaryl", "Zoryl", "Glimepir"] },
+            { generic: "Voglibose", reason: "Post-Meal Blood Sugar Control", brands: ["Voglibose", "Volibo", "Voglistat"] },
+            { generic: "Dapagliflozin", reason: "Type 2 Diabetes (SGLT2 Inhibitor)", brands: ["Forxiga", "Dapagliflozin", "Oxra"] },
+            { generic: "Sitagliptin", reason: "Type 2 Diabetes (DPP-4 Inhibitor)", brands: ["Januvia", "Sitaglyn", "Sitamet"] },
+
+            // ===== BP / HEART / CHOLESTEROL =====
+            { generic: "Telmisartan", reason: "High Blood Pressure / Hypertension", brands: ["Telma", "Telmikind", "Telsar"] },
+            { generic: "Amlodipine", reason: "High Blood Pressure / Angina", brands: ["Amlodipine", "Norvasc", "Amtas"] },
+            { generic: "Amlodipine + Telmisartan", reason: "High BP (Combination)", brands: ["Telma-AM", "Telmikind-AM", "Telsar-AM"] },
+            { generic: "Enalapril", reason: "High Blood Pressure / Heart Failure", brands: ["Envas", "Enalapril", "Enal"] },
+            { generic: "Losartan", reason: "High Blood Pressure / Hypertension", brands: ["Losar", "Cozaar", "Losakind"] },
+            { generic: "Atorvastatin", reason: "High Cholesterol / Dyslipidemia", brands: ["Atorlip", "Lipitor", "Storvas"] },
+            { generic: "Rosuvastatin", reason: "High Cholesterol / Dyslipidemia", brands: ["Rosuvas", "Crestor", "Rozavel"] },
+            { generic: "Clopidogrel", reason: "Heart Attack / Stroke Prevention", brands: ["Plavix", "Clopilet", "Deplatt"] },
+            { generic: "Aspirin 75mg", reason: "Heart Attack / Stroke Prevention", brands: ["Ecosprin 75", "Asprin 75", "Cardiprin 75"] },
+            { generic: "Aspirin 150mg", reason: "Heart Attack / Stroke Prevention", brands: ["Ecosprin 150", "Asprin 150"] },
+            { generic: "Metoprolol", reason: "High BP / Heart Failure / Angina", brands: ["Betaloc", "Metolar", "Embeta"] },
+            { generic: "Furosemide", reason: "Edema / Fluid Retention / Heart Failure", brands: ["Lasix", "Frusemide", "Dytide"] },
+
+            // ===== ANTIBIOTICS =====
+            { generic: "Amoxicillin", reason: "Bacterial Infections (Broad Spectrum)", brands: ["Amoxil", "Mox", "Novamox"] },
+            { generic: "Amoxicillin + Clavulanic Acid", reason: "Bacterial Infections (Resistant)", brands: ["Augmentin", "Clavam", "Moxikind"] },
+            { generic: "Azithromycin", reason: "Bacterial Infections / Respiratory", brands: ["Azee", "Zithromax", "Aziwok"] },
+            { generic: "Ciprofloxacin", reason: "Bacterial Infections / UTI", brands: ["Cifran", "Ciprobid", "Ciproxin"] },
+            { generic: "Levofloxacin", reason: "Bacterial Infections / Pneumonia", brands: ["Levomac", "Levoflox", "Tavanic"] },
+            { generic: "Cefixime", reason: "Bacterial Infections / Typhoid", brands: ["Cefix", "Zifi", "Cefolac"] },
+            { generic: "Doxycycline", reason: "Acne / Lyme Disease / Malaria", brands: ["Doxylin", "Doxy 100", "Doxitab"] },
+            { generic: "Metronidazole", reason: "Bacterial / Protozoal Infections", brands: ["Flagyl", "Metrogyl", "Metron"] },
+            { generic: "Ofloxacin", reason: "Bacterial Infections / UTI", brands: ["Oflox", "Zenflox", "Oflomac"] },
+            { generic: "Nitrofurantoin", reason: "UTI / Urinary Tract Infection", brands: ["Macrobid", "Furadantin", "Nitrobid"] },
+
+            // ===== ASTHMA / BREATHING =====
+            { generic: "Salbutamol", reason: "Asthma / COPD / Breathing Difficulty", brands: ["Asthalin", "Ventolin", "Salbair"] },
+            { generic: "Levosalbutamol", reason: "Asthma / COPD / Bronchospasm", brands: ["Levolin", "Levosal", "Sallevo"] },
+            { generic: "Budesonide", reason: "Asthma / COPD (Inhaler)", brands: ["Budecort", "Pulmicort", "Budex"] },
+            { generic: "Montelukast", reason: "Asthma / Allergic Rhinitis", brands: ["Montair", "Montus", "Lukast"] },
+            { generic: "Montelukast + Levocetirizine", reason: "Asthma + Allergy", brands: ["Montair LC", "Montus-L", "Lukast-C"] },
+
+            // ===== VITAMINS / SUPPLEMENTS =====
+            { generic: "Vitamin B-Complex", reason: "Weakness / Fatigue / Nerve Health", brands: ["Becosules", "Neurobion", "B-Complex"] },
+            { generic: "Vitamin B-Complex + C", reason: "Weakness / Energy / Immunity", brands: ["Becosules Z", "Neurobion Forte", "B-Plus"] },
+            { generic: "Calcium + Vitamin D3", reason: "Bone Health / Osteoporosis", brands: ["Shelcal", "Calcirol", "Ostocal"] },
+            { generic: "Calcium + Vitamin D3 + B12", reason: "Bone Health / Nerve Health", brands: ["Shelcal Plus", "Calcirol Plus", "Ostocal Plus"] },
+            { generic: "Iron + Folic Acid", reason: "Anemia / Iron Deficiency", brands: ["Feronia", "Iron Plus", "Fero-Grad"] },
+            { generic: "Vitamin D3", reason: "Vitamin D Deficiency / Bone Health", brands: ["Calcirol", "D-Rise", "Uprise D3"] },
+            { generic: "Vitamin B12", reason: "B12 Deficiency / Neuropathy", brands: ["Mecofol", "Nurokind", "B12"] },
+            { generic: "Zinc + Vitamin C", reason: "Immunity / Wound Healing", brands: ["Zincovit", "Zinc-C", "Immuno-Z"] },
+
+            // ===== MULTI-SYMPTOM / COLD & FLU =====
+            { generic: "Paracetamol + Phenylephrine + Caffeine", reason: "Cold / Fever / Blocked Nose", brands: ["D Cold Total", "Sinarest", "Coldact"] },
+            { generic: "Paracetamol + Chlorpheniramine + Phenylephrine", reason: "Cold / Allergy / Fever", brands: ["D Cold", "Sinarest", "Coldarin"] },
+            { generic: "Cetirizine + Paracetamol + Phenylephrine", reason: "Cold / Allergy / Fever", brands: ["Cetzine Cold", "Zerodol Cold", "Alerid Cold"] },
+
+            // ===== SKIN / FUNGAL =====
+            { generic: "Clotrimazole", reason: "Fungal Infections / Ringworm", brands: ["Clotrimax", "Canesten", "Clozen"] },
+            { generic: "Terbinafine", reason: "Fungal Infections / Athlete's Foot", brands: ["Terbin", "Lamisil", "Terbiforce"] },
+            { generic: "Fluconazole", reason: "Fungal Infections / Oral Thrush", brands: ["Flucostat", "Fluzole", "Diflucan"] },
+            { generic: "Itraconazole", reason: "Fungal Infections / Nail Fungus", brands: ["Itrasys", "Sporanox", "Itro"] },
+
+            // ===== OTHER =====
+            { generic: "Tranexamic Acid", reason: "Excessive Bleeding / Menorrhagia", brands: ["Tranexa", "Stypca", "Tranemic"] },
+            { generic: "Pregabalin", reason: "Nerve Pain / Neuropathy / Epilepsy", brands: ["Pregabid", "Gabapin", "Pregalin"] },
+            { generic: "Gabapentin", reason: "Nerve Pain / Neuropathy / Epilepsy", brands: ["Gaba", "Gabapin", "Neurotin"] },
+            { generic: "Tamsulosin", reason: "BPH / Enlarged Prostate", brands: ["Flomax", "Tamsin", "Tamsukind"] },
+            { generic: "Dutasteride + Tamsulosin", reason: "BPH / Enlarged Prostate", brands: ["Dutamax", "Tamsulosin-D", "Dutaprost"] },
+            { generic: "Prednisolone", reason: "Inflammation / Autoimmune / Allergy", brands: ["Wysolone", "Predmet", "Solone"] },
+            { generic: "Hydroxychloroquine", reason: "Malaria / Rheumatoid Arthritis", brands: ["HCQS", "Hydroquin", "Plaquenil"] },
+            { generic: "Ursodeoxycholic Acid (UDCA)", reason: "Liver Disease / Gallstones", brands: ["Ursocol", "Udifl", "Actigall"] },
+        ];
+
+        // ===========================================
+        // 🚀 APP LOGIC
+        // ===========================================
+
+        const searchInput = document.getElementById('searchInput');
+        const tableBody = document.getElementById('tableBody');
+        const noResults = document.getElementById('noResults');
+        const countDisplay = document.getElementById('countDisplay');
+        const clearBtn = document.getElementById('clearBtn');
+
+        const popup = document.getElementById('brandPopup');
+        const popupBrandList = document.getElementById('popupBrandList');
+        const popupArrow = document.getElementById('popupArrow');
+
+        let activePopupGeneric = null;
+
+        function render(filtered) {
+            if (filtered.length === 0) {
+                tableBody.innerHTML = '';
+                noResults.style.display = 'block';
+                countDisplay.textContent = '0';
+                return;
+            }
+
+            noResults.style.display = 'none';
+            countDisplay.textContent = filtered.length;
+
+            tableBody.innerHTML = filtered.map((item) =>
+                `<tr>
+                    <td>
+                        <span class="generic-clickable" data-generic="${item.generic}">
+                            ${item.generic}
+                            <span class="click-icon">👆</span>
+                        </span>
+                    </td>
+                    <td><span class="reason-tag">${item.reason}</span></td>
+                </tr>`
+            ).join('');
+
+            document.querySelectorAll('.generic-clickable').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const genericName = this.dataset.generic;
+                    const rect = this.getBoundingClientRect();
+                    showPopup(genericName, rect);
+                });
+            });
+        }
+
+        function filterMedicines() {
+            const query = searchInput.value.trim().toLowerCase();
+            const filtered = medicineData.filter(item => {
+                const matchGeneric = item.generic.toLowerCase().includes(query);
+                const matchReason = item.reason.toLowerCase().includes(query);
+                const matchBrands = item.brands.some(b => b.toLowerCase().includes(query));
+                return matchGeneric || matchReason || matchBrands;
+            });
+            render(filtered);
+            hidePopup();
+        }
+
+        function showPopup(genericName, rect) {
+            const item = medicineData.find(m => m.generic === genericName);
+            if (!item) return;
+            hidePopup();
+
+            if (item.brands.length === 0) {
+                popupBrandList.innerHTML = `<div class="no-brands">No brands</div>`;
+            } else {
+                const firstBrand = item.brands[0];
+                const otherBrands = item.brands.slice(1);
+                let html = `<div class="brand-item"><span class="brand-highlight">${firstBrand}</span>`;
+                if (otherBrands.length > 0) {
+                    html += `<span class="separator">,</span> <span class="brand-other">${otherBrands.join(', ')}</span>`;
+                }
+                html += `</div>`;
+                popupBrandList.innerHTML = html;
+            }
+
+            const popupWidth = Math.min(300, window.innerWidth - 40);
+            let left = rect.left + (rect.width / 2) - (popupWidth / 2);
+            let top = rect.bottom + 12;
+            let arrowPos = 'bottom';
+
+            if (left + popupWidth > window.innerWidth - 20) left = window.innerWidth - popupWidth - 20;
+            if (left < 20) left = 20;
+
+            const popupHeight = 70;
+            if (top + popupHeight > window.innerHeight - 20) {
+                top = rect.top - 20 - popupHeight;
+                arrowPos = 'top';
+            }
+
+            popup.style.width = popupWidth + 'px';
+            popup.style.left = left + 'px';
+            popup.style.top = top + 'px';
+            popup.className = 'brand-popup active';
+            popup.classList.add(arrowPos === 'top' ? 'arrow-top' : 'arrow-bottom');
+
+            const arrowLeft = Math.min(Math.max(20, (rect.left + rect.width / 2) - left - 6), popupWidth - 40);
+            popupArrow.style.left = arrowLeft + 'px';
+            activePopupGeneric = genericName;
+        }
+
+        function hidePopup() {
+            popup.classList.remove('active', 'arrow-bottom', 'arrow-top');
+            activePopupGeneric = null;
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.generic-clickable') && !e.target.closest('.brand-popup')) hidePopup();
+        });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') hidePopup(); });
+        window.addEventListener('scroll', hidePopup);
+        window.addEventListener('resize', hidePopup);
+
+        searchInput.addEventListener('input', filterMedicines);
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            filterMedicines();
+            searchInput.focus();
+        });
+
+        filterMedicines();
+    </script>
+
+</body>
+</html>
